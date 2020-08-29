@@ -20,8 +20,8 @@ public:
 	void initFont();
 	void initHPBar();
 	void RenderHPBar(sf::RenderTarget &target);
-	void UpdateHPBar(sf::RenderTarget &target);
+	void UpdateHPBar();
 	void Update(const float &dt);
 	void Render(sf::RenderTarget &target);
+	sf::RectangleShape &getHpBarInner() { return this->hpBarInner; }
 };
-
