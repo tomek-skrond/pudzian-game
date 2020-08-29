@@ -3,13 +3,14 @@
 #include "Pudzian.h"
 #include "EnemyJakob.h"
 #include "PlayerGUI.h"
-#include "SpawnEngine.h"
 #include "Bullet.h"
 
 class Game
 {
 	
 	float dt;
+	float currentHp;
+
 	sf::RenderWindow* window;
 	sf::Event e;
 	sf::VideoMode videoMode;
@@ -21,15 +22,12 @@ class Game
 	std::vector<Bullet*> bullets;
 
 	Pudzian player;
-	EnemyJakob jakob;
+	EnemyJakob *jakob;
 
-	std::vector<EnemyJakob> enemyVector;
+	std::vector<EnemyJakob*> enemyVector;
 
-	//SpawnEngine* spawnEngine;
 	PlayerGUI* playerGUI;
-
-	//std::vector<Entity> entityVector;
-
+	sf::RectangleShape hpBarModified;
 
 	//functions
 	void InitWindow();
@@ -40,7 +38,7 @@ class Game
 
 public:
 
-	Game(Pudzian &player,EnemyJakob &jakob);
+	Game(Pudzian &player,EnemyJakob *jakob);
 	Game();
 	virtual ~Game();
 
@@ -49,18 +47,14 @@ public:
 
 	//functions
 	void UpdateBullets();
-	void Fight();
-	void EnemyAttackInteraction(EnemyJakob & jakob,Pudzian &player);
-	void EnemyAttackInteraction(Pudzian & player,EnemyJakob &jakob);
-	void JakobAttack(Pudzian &p);
-	void PudzianAttack(EnemyJakob &j);
 	void UpdateHandler();
+	void UpdateGUI();
 	void DrawEntities();
 	void Update();
 	void UpdateDt();
 	void PollEvents(const float &dt);
 	void Render();
-
+	void SpawnEnemies();
 	float getDt();
 };
 
