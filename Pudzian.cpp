@@ -15,7 +15,7 @@ void Pudzian::InitPudzian()
 {
 	//set pudzian parameters
 	this->movementSpeed = 300.f;
-	this->healthPoints = 1000.f;
+	this->healthPoints = 500.f;
 	this->Damage = 10.f;
 	this->sprite.setScale(sf::Vector2f(0.7f, 0.7f));
 	this->texture.loadFromFile("Resources/Textures/pudzianos.png");
@@ -26,6 +26,8 @@ void Pudzian::Move(const float dir_x, const float dir_y, const float & dt)
 	this->sprite.move(dir_x*dt*this->movementSpeed, dir_y*dt*this->movementSpeed);
 	this->UpdateRotation(dir_x);
 	
+	this->direction.x = dir_x;
+	this->direction.y = dir_y;
 }
 
 void Pudzian::Update(const float & dt)
@@ -62,11 +64,12 @@ void Pudzian::UpdateRotation(const float indicator)
 	if (indicator > 0 || indicator == 0) {
 		this->texture.loadFromFile("Resources/Textures/pudzianos.png");
 		this->sprite.setTexture(this->texture);
-
+		this->rotationIndicator = 1.f;
 	}
 	else {
 		this->texture.loadFromFile("Resources/Textures/pudzian_inverted.png");
 		this->sprite.setTexture(this->texture);
+		this->rotationIndicator = 0.f;
 	}
 	this->AttackAnimation(indicator);
 }
