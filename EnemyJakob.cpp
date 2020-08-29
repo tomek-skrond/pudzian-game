@@ -6,8 +6,9 @@ EnemyJakob::EnemyJakob()
 {
 	this->InitJakob();
 }
-EnemyJakob::EnemyJakob(float Damage,float healthPoints,float posX,float posY){
+EnemyJakob::EnemyJakob(float Damage,float healthPoints,float posX,float posY,Pudzian &player,const float dt){
 	
+	this->movementSpeed = 500.f;
 	this->Damage = Damage;
 	this->healthPoints = healthPoints;
 	this->SpawnPosition.x = posX;
@@ -20,7 +21,6 @@ EnemyJakob::EnemyJakob(float Damage,float healthPoints,float posX,float posY){
 	this->sprite.setPosition(this->SpawnPosition);
 
 }
-
 float EnemyJakob::getAttackPoints()
 {
 	return this->Damage;
