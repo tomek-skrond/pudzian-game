@@ -8,9 +8,6 @@ void Game::InitVariables()
 	this->playerGUI = new PlayerGUI(&this->player);
 	this->background.loadFromFile("Resources/Textures/background.png");
 	this->backgroundSprite.setTexture(this->background);
-
-	this->bullets.push_back(new Bullet(this->textures["BULLET_RIGHT"], this->jakob.getPosition().x, this->jakob.getPosition().y, -1.f, 0.f, 50.f));
-	
 }
 
 void Game::InitTextures()
@@ -33,12 +30,12 @@ void Game::InitWindow()
 
 }
 
-Game::Game(Pudzian &player,EnemyJakob &jakob):player(player),jakob(jakob)
+Game::Game(Pudzian &player,EnemyJakob *jakob):player(player),jakob(jakob)
 {
-	
-	this->InitVariables();
 	this->InitTextures();
+	this->InitVariables();
 	this->InitWindow();
+
 	//this->InitEnemies(ez);
 	this->Render();
 	this->Update();
@@ -47,8 +44,10 @@ Game::Game()
 {
 
 	//this->spawnEngine = new SpawnEngine(this->spawnEngine->getLevel());
+	this->InitTextures();
 	this->InitVariables();
 	this->InitWindow();
+	this->SpawnEnemies();
 	//this->InitEnemies(ez);
 	this->Render();
 	this->Update();
@@ -62,11 +61,16 @@ Game::~Game()
 
 	//delete textures
 	for (auto &x : this->textures) {
-		delete &x.second;
+		delete x.second;
 	}
 	//delete bullets
-	for (auto &x : this->bullets) {
-		delete &x;
+	for (auto *x : this->bullets) {
+		delete x;
+	}
+	//delete enemies
+	for (auto *x : this->enemyVector) {
+		delete x;
+		std::cout << "jakob deleted" << std::endl;
 	}
 }
 
@@ -77,60 +81,38 @@ const bool Game::GetWindowIsOpen() const
 
 void Game::UpdateBullets()
 {
-	for (auto &bullet : this->bullets) {
+	unsigned counter = 0;
+	for (auto *bullet : this->bullets) {
 		bullet->Update(this->dt);
+		
+		//bullet culling
+		if (bullet->GetBounds().top + bullet->GetBounds().height < 0.f) {
+
+			//delete current bullet
+			delete this->bullets.at(counter);
+			this->bullets.erase(this->bullets.begin() + counter);
+			--counter;
+			std::cout << this->bullets.size() << std::endl;
+		}
+		++counter;
 	}
+
 }
 
-void Game::Fight()
-{
-	this->EnemyAttackInteraction(this->player,this->jakob);
-	this->EnemyAttackInteraction(this->jakob,this->player);
-}
-
-
-void Game::EnemyAttackInteraction(EnemyJakob &jakob,Pudzian &player) {
-	if (player.getSprite().getGlobalBounds().contains(jakob.getPosition().x,jakob.getPosition().y) && player.getIsAttacking()) {
-		this->PudzianAttack(jakob);
-	}
-}
-
-void Game::EnemyAttackInteraction(Pudzian &player,EnemyJakob &jakob) {
-	if (jakob.getSprite().getGlobalBounds().contains(player.getPosition().x, player.getPosition().y)) {
-		this->JakobAttack(player);
-	}
-}
-
-void Game::JakobAttack(Pudzian &p) {
-	float hp = p.getHealthPoints();
-
-	hp -= this->jakob.getAttackPoints();
-	p.setHealthPoints(hp);
-
-	std::cout << "xdd" << p.getHealthPoints() << std::endl;
-}
-void Game::PudzianAttack(EnemyJakob &j) {
-	float hp = j.getHealthPoints();
-
-	hp -= this->player.getAttackPoints();
-	j.setHealthPoints(hp);
-
-	std::cout << j.getHealthPoints() << std::endl;
-}
 
 void Game::UpdateHandler()
 {
-	/*
-	this->entityVector.push_back(this->player);
-	this->entityVector.push_back(this->jakob);
-
-	for (auto &entity : entityVector) {
-		entity.Update(this->dt);
-	}*/
 	this->playerGUI->Update(this->dt);
 	this->player.Update(this->dt);
-	this->jakob.Update(this->dt);
+	for (auto *x : this->enemyVector) {
+		x->Update(this->dt,this->player);
+	}
 
+}
+
+void Game::UpdateGUI()
+{
+	this->playerGUI->Update(this->dt);
 }
 
 //SPRITE DRAWING
@@ -138,11 +120,14 @@ void Game::DrawEntities()
 {
 	this->window->draw(this->backgroundSprite);
 	this->playerGUI->Render(*this->window);
+
 	for (auto &bullet : this->bullets) {
 		bullet->Render(this->window);
 	}
 	//this->spawnEngine->Render(this->window);
-	this->jakob.Render(this->window);
+	for (auto *x : this->enemyVector) {
+		x->Render(this->window);
+	}
 	this->player.Render(this->window);
 }
 
@@ -151,10 +136,9 @@ void Game::Update()
 {
 	this->UpdateDt();
 	this->PollEvents(this->dt);
-	//TODO: walka tutaj
-	this->Fight();
+	this->UpdateBullets();
+	//this->Fight();
 	this->UpdateHandler();
-
 }
 
 //UPDATING DT
@@ -172,7 +156,40 @@ void Game::PollEvents(const float &dt)
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 			this->window->close();
 		} 
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+			if (this->player.getRotationIndicator()) {
+				this->bullets.push_back(new Bullet(this->textures["BULLET_RIGHT"], this->player.getPos().x, this->player.getPos().y, 1.f, 0.f, 500.f));
+			}
+			else {
+				this->bullets.push_back(new Bullet(this->textures["BULLET_LEFT"], this->player.getPos().x, this->player.getPos().y, -1.f, 0.f, 500.f));
+			}
 
+		}
+		for (auto *i : this->enemyVector) {
+			//TODO: EXTRACT!!!!!!{
+			if (this->player.getSprite().getGlobalBounds().contains(i->getPosition().x, i->getPosition().y) && this->player.getIsAttacking()) {
+				float hp = this->player.getHealthPoints();
+
+				hp -= i->getAttackPoints();
+				this->player.setHealthPoints(hp);
+
+				this->currentHp = hp;
+
+				std::cout << "xdd" << this->player.getHealthPoints() << std::endl;
+			}
+			if (i->getSprite().getGlobalBounds().contains(this->player.getPos().x, this->player.getPos().y)) {
+				float hp = i->getHealthPoints();
+
+				hp -= this->player.getAttackPoints();
+				i->setHealthPoints(hp);
+
+				this->currentHp = hp;
+
+				std::cout << i->getHealthPoints() << std::endl;
+			}
+			//}
+		}
+		
 	}
 }
 
@@ -189,6 +206,17 @@ void Game::Render()
 	this->window->clear(sf::Color(0, 0, 0, 255));
 	this->DrawEntities();
 	this->window->display();
+}
+
+void Game::SpawnEnemies()
+{
+	std::mt19937 generator(123);
+	std::uniform_real_distribution<float> dis1(0.0, 1920.0);
+	std::uniform_real_distribution<float> dis2(0.0, 1080.0);
+
+	for (int i = 0; i < 7; ++i) {
+		this->enemyVector.push_back(new EnemyJakob(5.f, 30.f, dis1(generator), dis2(generator), this->player,this->dt));
+	}
 }
 
 float Game::getDt()
