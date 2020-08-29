@@ -7,7 +7,7 @@ Bullet::Bullet()
 
 Bullet::Bullet(sf::Texture* texture,float posX,float posY,float dirX, float dirY, float movementSpeed)
 {
-	this->movementSpeed = 100.f;
+	this->movementSpeed = movementSpeed;
 	this->position = sf::Vector2f(posX,posY);
 	this->sprite.setTexture(*texture);
 	direction.x = dirX;
@@ -26,4 +26,5 @@ void Bullet::Update(const float dt)
 
 void Bullet::Render(sf::RenderTarget * target)
 {
+	target->draw(this->sprite);
 }
