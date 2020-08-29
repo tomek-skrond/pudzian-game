@@ -17,8 +17,7 @@ public:
 	void Update(const float dt);
 	void Render(sf::RenderTarget *target = nullptr);
 
-	const sf::FloatRect GetBounds() {
+	const sf::FloatRect GetBounds() const {
 		return this->sprite.getGlobalBounds();
 	}
 };
-
