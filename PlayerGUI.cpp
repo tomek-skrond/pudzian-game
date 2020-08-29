@@ -41,14 +41,18 @@ void PlayerGUI::RenderHPBar(sf::RenderTarget &target)
 	target.draw(this->hpBarInner);
 }
 
-void PlayerGUI::UpdateHPBar(sf::RenderTarget& target)
+void PlayerGUI::UpdateHPBar()
 {
-	this->RenderHPBar(target);
+	
+	//this->RenderHPBar(target);
+	this->hpBarInner.setScale(this->player->getHealthPoints() / 500, 1.f);//TODO: get max health instead of '500'
+
 }
 
 void PlayerGUI::Update(const float &dt)
 {
 	//this->hpBarInner.setSize(&this->player->getHealthPoints().x);
+	this->UpdateHPBar();
 }
 
 void PlayerGUI::Render(sf::RenderTarget &target)
